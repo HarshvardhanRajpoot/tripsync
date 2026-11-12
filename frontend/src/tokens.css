@@ -1,0 +1,156 @@
+/* ==========================================================================
+   TripSync design tokens
+   Concept: a paper boarding pass / travel journal — dashed "perforation"
+   dividers, a route line motif, ink-stamp accent colors. Not a generic
+   SaaS-card look: cards read like tickets, not tiles.
+   ========================================================================== */
+
+:root {
+  /* Color */
+  --ink: #17233a;           /* primary text, dark surfaces */
+  --ink-soft: #4a5468;      /* secondary text */
+  --paper: #f5f4ef;         /* app background */
+  --paper-raised: #ffffff;  /* card surfaces */
+  --line: #dcd8cc;          /* borders, dividers on paper */
+  --rust: #b8492f;          /* primary action / accent */
+  --rust-dark: #96391f;     /* hover state */
+  --gold: #c99a3f;          /* budget / money accents */
+  --teal: #2f6f62;          /* confirmed / success status */
+  --error: #b8492f;
+
+  /* Type */
+  --font-display: "Fraunces", Georgia, serif;
+  --font-body: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Layout */
+  --radius: 4px;
+  --max-width: 960px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+button {
+  font-family: inherit;
+}
+
+a {
+  color: var(--ink);
+}
+
+.app-shell {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* A dashed line evoking a ticket's tear-off perforation */
+.perforation {
+  border: none;
+  border-top: 1.5px dashed var(--line);
+  margin: 0;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px 20px;
+  border-radius: var(--radius);
+  border: 1.5px solid transparent;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--rust);
+  color: #fff;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--rust-dark);
+}
+
+.btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  border-color: var(--line);
+  color: var(--ink);
+}
+
+.btn-ghost:hover {
+  border-color: var(--ink-soft);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 18px;
+}
+
+.field label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.field input {
+  font-family: var(--font-body);
+  font-size: 15px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--paper-raised);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.field input:focus {
+  border-color: var(--ink);
+}
+
+.field-row {
+  display: flex;
+  gap: 14px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+.error-banner {
+  background: #f8e9e4;
+  border: 1.5px solid var(--rust);
+  color: var(--rust-dark);
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 13.5px;
+  margin-bottom: 16px;
+}
