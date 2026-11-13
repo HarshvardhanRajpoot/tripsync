@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { api } from '../api'
+import { api, errorMessage } from '../api'
 
 function Login() {
   const [email, setEmail] = useState('')
@@ -9,7 +10,7 @@ function Login() {
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
 
-  async function handleSubmit(e) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError('')
     setLoading(true)
@@ -18,7 +19,7 @@ function Login() {
       api.setToken(res.access_token)
       navigate('/dashboard')
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setLoading(false)
     }

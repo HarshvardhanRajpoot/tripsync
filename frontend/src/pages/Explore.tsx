@@ -1,9 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
+import type { ChangeEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { api } from '../api'
-import LOCATIONS from '../data/indiaStatesDistricts.json'
+import { api, errorMessage } from '../api'
+import type { ExploreResult } from '../types'
+import rawLocations from '../data/indiaStatesDistricts.json'
 
-function fallbackLink(state, district) {
+// state name -> list of districts
+const LOCATIONS: Record<string, string[]> = rawLocations
+
+const SOURCE_LABELS: Record<string, string> = {
+  google: 'Google Places',
+  openstreetmap: 'OpenStreetMap',
+  wikipedia: 'Wikipedia',
+}
+
+function fallbackLink(state: string, district: string) {
   const q = encodeURIComponent(`top tourist places in ${district} ${state}`)
   return `https://www.google.com/maps/search/?api=1&query=${q}`
 }
@@ -12,7 +23,7 @@ function Explore() {
   const states = Object.keys(LOCATIONS)
   const [state, setState] = useState('')
   const [district, setDistrict] = useState('')
-  const [result, setResult] = useState(null)
+  const [result, setResult] = useState<ExploreResult | null>(null)
   const [loadingPlaces, setLoadingPlaces] = useState(false)
   const [error, setError] = useState('')
   const requestId = useRef(0) // ignore answers from older selections
@@ -26,7 +37,7 @@ function Explore() {
     }
   }, [])
 
-  function handleStateChange(e) {
+  function handleStateChange(e: ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value
     requestId.current += 1
     setState(value)
@@ -36,7 +47,7 @@ function Explore() {
     setLoadingPlaces(false)
   }
 
-  async function handleDistrictChange(e) {
+  async function handleDistrictChange(e: ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value
     setDistrict(value)
     setResult(null)
@@ -48,7 +59,7 @@ function Explore() {
       const data = await api.explorePlaces(state, value)
       if (myId === requestId.current) setResult(data)
     } catch (err) {
-      if (myId === requestId.current) setError(err.message)
+      if (myId === requestId.current) setError(errorMessage(err))
     } finally {
       if (myId === requestId.current) setLoadingPlaces(false)
     }
@@ -128,14 +139,16 @@ function Explore() {
                     </p>
                   )}
                 </div>
-                <a className="map-btn" href={p.maps_url} target="_blank" rel="noopener noreferrer">
-                  📍 Google Maps
-                </a>
+                {p.maps_url && (
+                  <a className="map-btn" href={p.maps_url} target="_blank" rel="noopener noreferrer">
+                    📍 Google Maps
+                  </a>
+                )}
               </div>
             ))}
           </div>
           <p className="trip-meta">
-            Source: {{ google: 'Google Places', openstreetmap: 'OpenStreetMap', wikipedia: 'Wikipedia' }[result.source] || result.source}
+            Source: {SOURCE_LABELS[result.source] ?? result.source}
           </p>
           <p className="explore-more">
             <a href={result.maps_search_url} target="_blank" rel="noopener noreferrer">

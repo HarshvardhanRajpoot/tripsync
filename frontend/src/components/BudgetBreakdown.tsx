@@ -1,6 +1,8 @@
 // Shows where the trip budget goes: travel, stay, food, activities, buffer.
 // Numbers come from the backend (budget_breakdown.py); they are estimates.
-const COLORS = {
+import type { BudgetBreakdownData, BudgetCategoryKey } from '../types'
+
+const COLORS: Record<BudgetCategoryKey, string> = {
   travel: '#3b82c4',
   stay: '#8b5cf6',
   food: '#e8833a',
@@ -8,9 +10,13 @@ const COLORS = {
   buffer: '#9aa3b2',
 }
 
-const rupees = (n) => '₹' + Math.round(n).toLocaleString('en-IN')
+const rupees = (n: number) => '₹' + Math.round(n).toLocaleString('en-IN')
 
-export default function BudgetBreakdown({ data }) {
+interface Props {
+  data?: BudgetBreakdownData
+}
+
+export default function BudgetBreakdown({ data }: Props) {
   if (!data || !data.categories) return null // older saved plans don't have a breakdown
 
   return (

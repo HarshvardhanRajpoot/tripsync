@@ -1,30 +1,30 @@
 import { useEffect, useState } from 'react'
+import type { FormEvent } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { api } from '../api'
+import { api, errorMessage } from '../api'
 import BudgetBreakdown from '../components/BudgetBreakdown'
-
-const INTEREST_OPTIONS = ['beach', 'food', 'culture', 'adventure', 'nightlife', 'nature', 'shopping']
-const PACE_OPTIONS = ['relaxed', 'moderate', 'packed']
+import { INTEREST_OPTIONS, PACE_OPTIONS, isInterestTag, isPace } from '../types'
+import type { AiPlan, BudgetStyle, InterestTag, MemberPreference, Pace, Trip } from '../types'
 
 function TripDetail() {
-  const { id } = useParams()
+  const { id = '' } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const [trip, setTrip] = useState(null)
-  const [members, setMembers] = useState([])
+  const [trip, setTrip] = useState<Trip | null>(null)
+  const [members, setMembers] = useState<MemberPreference[]>([])
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
 
-  const [selectedTags, setSelectedTags] = useState([])
-  const [pace, setPace] = useState('moderate')
+  const [selectedTags, setSelectedTags] = useState<InterestTag[]>([])
+  const [pace, setPace] = useState<Pace>('moderate')
   const [mustSee, setMustSee] = useState('')
   const [saving, setSaving] = useState(false)
 
   const [aiRequest, setAiRequest] = useState('')
-  const [aiPlan, setAiPlan] = useState(null)
+  const [aiPlan, setAiPlan] = useState<AiPlan | null>(null)
   const [aiLoading, setAiLoading] = useState(false)
   const [aiError, setAiError] = useState('')
-  const [budgetStyle, setBudgetStyle] = useState('balanced')
+  const [budgetStyle, setBudgetStyle] = useState<BudgetStyle>('balanced')
 
   useEffect(() => {
     if (!api.getToken()) {
@@ -49,22 +49,22 @@ function TripDetail() {
       const me = await api.me()
       const mine = prefsRes.find((m) => m.user_id === me.id)
       if (mine?.preference) {
-        setSelectedTags(mine.preference.interest_tags.split(',').filter(Boolean))
-        setPace(mine.preference.pace)
+        setSelectedTags(mine.preference.interest_tags.split(',').filter(isInterestTag))
+        setPace(isPace(mine.preference.pace) ? mine.preference.pace : 'moderate')
         setMustSee(mine.preference.must_see_places || '')
       }
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     }
   }
 
-  function toggleTag(tag) {
+  function toggleTag(tag: InterestTag) {
     setSelectedTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     )
   }
 
-  async function handleSave(e) {
+  async function handleSave(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setSaving(true)
     setError('')
@@ -78,13 +78,13 @@ function TripDetail() {
       setSaved(true)
       loadData()
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setSaving(false)
     }
   }
 
-  async function handleGeneratePlan(e) {
+  async function handleGeneratePlan(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setAiLoading(true)
     setAiError('')
@@ -92,7 +92,7 @@ function TripDetail() {
       const plan = await api.generateAiPlan(id, { request: aiRequest.trim() || null, budget_style: budgetStyle })
       setAiPlan(plan)
     } catch (err) {
-      setAiError(err.message)
+      setAiError(errorMessage(err))
     } finally {
       setAiLoading(false)
     }
@@ -153,7 +153,13 @@ function TripDetail() {
 
         <label className="field-label">
           Pace
-          <select className="field" value={pace} onChange={(e) => setPace(e.target.value)}>
+          <select
+            className="field"
+            value={pace}
+            onChange={(e) => {
+              if (isPace(e.target.value)) setPace(e.target.value)
+            }}
+          >
             {PACE_OPTIONS.map((p) => (
               <option key={p} value={p}>{p}</option>
             ))}
@@ -192,7 +198,11 @@ function TripDetail() {
         </label>
         <label className="field-label">
           Budget style
-          <select className="field" value={budgetStyle} onChange={(e) => setBudgetStyle(e.target.value)}>
+          <select
+            className="field"
+            value={budgetStyle}
+            onChange={(e) => setBudgetStyle(e.target.value as BudgetStyle)}
+          >
             <option value="budget">Budget-friendly (more for travel and food)</option>
             <option value="balanced">Balanced</option>
             <option value="comfort">Comfortable (more for stay)</option>

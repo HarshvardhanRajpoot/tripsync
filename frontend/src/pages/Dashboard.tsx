@@ -1,8 +1,26 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent, MouseEvent } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { api } from '../api'
+import { api, errorMessage } from '../api'
+import type { Trip, User } from '../types'
 
 const DAY = 24 * 60 * 60 * 1000
+
+type TimingKey = 'nodates' | 'upcoming' | 'ongoing' | 'completed'
+type FilterKey = 'all' | Exclude<TimingKey, 'nodates'>
+type SortKey = 'soonest' | 'newest' | 'budget'
+
+interface Timing {
+  key: TimingKey
+  label: string
+  days: number | null
+}
+
+// A trip together with the values we compute for display
+interface TripView extends Trip {
+  timing: Timing
+  length: number | null
+}
 
 function startOfToday() {
   const d = new Date()
@@ -11,7 +29,7 @@ function startOfToday() {
 }
 
 // Works out where a trip is in time, using only start_date / end_date
-function getTiming(trip) {
+function getTiming(trip: Trip): Timing {
   if (!trip.start_date) return { key: 'nodates', label: 'Dates not set', days: null }
   const today = startOfToday().getTime()
   const start = new Date(trip.start_date).setHours(0, 0, 0, 0)
@@ -24,18 +42,18 @@ function getTiming(trip) {
   return { key: 'completed', label: 'Completed', days: null }
 }
 
-function tripLength(trip) {
+function tripLength(trip: Trip): number | null {
   if (!trip.start_date || !trip.end_date) return null
   const s = new Date(trip.start_date).setHours(0, 0, 0, 0)
   const e = new Date(trip.end_date).setHours(0, 0, 0, 0)
   return Math.max(Math.round((e - s) / DAY) + 1, 1)
 }
 
-function fmtDate(iso) {
+function fmtDate(iso: string) {
   return new Date(iso).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
 }
 
-function money(n) {
+function money(n: number | null | undefined) {
   return `₹${Number(n || 0).toLocaleString('en-IN')}`
 }
 
@@ -46,9 +64,16 @@ const STEPS = [
   { icon: '🔄', title: 'Re-plan anytime', text: 'Place closed? Re-run it on the remaining budget and days.' },
 ]
 
+const FILTERS: [FilterKey, string][] = [
+  ['all', 'All'],
+  ['upcoming', 'Upcoming'],
+  ['ongoing', 'In progress'],
+  ['completed', 'Completed'],
+]
+
 function Dashboard() {
-  const [user, setUser] = useState(null)
-  const [trips, setTrips] = useState([])
+  const [user, setUser] = useState<User | null>(null)
+  const [trips, setTrips] = useState<Trip[]>([])
   const [error, setError] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [showJoinForm, setShowJoinForm] = useState(false)
@@ -63,9 +88,9 @@ function Dashboard() {
   const [creating, setCreating] = useState(false)
 
   const [search, setSearch] = useState('')
-  const [filter, setFilter] = useState('all')
-  const [sort, setSort] = useState('soonest')
-  const [copiedId, setCopiedId] = useState(null)
+  const [filter, setFilter] = useState<FilterKey>('all')
+  const [sort, setSort] = useState<SortKey>('soonest')
+  const [copiedId, setCopiedId] = useState<number | null>(null)
 
   const navigate = useNavigate()
 
@@ -83,13 +108,13 @@ function Dashboard() {
       setUser(meRes)
       setTrips(tripsRes)
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
       api.clearToken()
       navigate('/login')
     }
   }
 
-  async function handleCreateTrip(e) {
+  async function handleCreateTrip(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setCreating(true)
     setError('')
@@ -109,7 +134,7 @@ function Dashboard() {
       setShowForm(false)
       loadData()
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setCreating(false)
     }
@@ -120,7 +145,7 @@ function Dashboard() {
     navigate('/login')
   }
 
-  async function handleJoinTrip(e) {
+  async function handleJoinTrip(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setJoining(true)
     setError('')
@@ -130,13 +155,13 @@ function Dashboard() {
       setShowJoinForm(false)
       loadData()
     } catch (err) {
-      setError(err.message)
+      setError(errorMessage(err))
     } finally {
       setJoining(false)
     }
   }
 
-  function copyInvite(e, trip) {
+  function copyInvite(e: MouseEvent<HTMLButtonElement>, trip: Trip) {
     e.preventDefault()
     e.stopPropagation()
     navigator.clipboard?.writeText(trip.invite_code)
@@ -145,7 +170,7 @@ function Dashboard() {
   }
 
   // Trips with their computed timing, computed once per change
-  const enriched = useMemo(
+  const enriched = useMemo<TripView[]>(
     () => trips.map((t) => ({ ...t, timing: getTiming(t), length: tripLength(t) })),
     [trips]
   )
@@ -166,7 +191,7 @@ function Dashboard() {
     if (live) return live
     return enriched
       .filter((t) => t.timing.key === 'upcoming')
-      .sort((a, b) => a.timing.days - b.timing.days)[0]
+      .sort((a, b) => (a.timing.days ?? 0) - (b.timing.days ?? 0))[0]
   }, [enriched])
 
   const visible = useMemo(() => {
@@ -176,7 +201,7 @@ function Dashboard() {
       if (!q) return true
       return t.name.toLowerCase().includes(q) || t.destination.toLowerCase().includes(q)
     })
-    const rank = (t) => (t.timing.days == null ? 9999 : t.timing.days)
+    const rank = (t: TripView) => (t.timing.days == null ? 9999 : t.timing.days)
     if (sort === 'soonest') list = [...list].sort((a, b) => rank(a) - rank(b))
     if (sort === 'newest') list = [...list].sort((a, b) => b.id - a.id)
     if (sort === 'budget') list = [...list].sort((a, b) => b.total_budget - a.total_budget)
@@ -309,18 +334,13 @@ function Dashboard() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
-          <select className="field toolbar-sort" value={sort} onChange={(e) => setSort(e.target.value)}>
+          <select className="field toolbar-sort" value={sort} onChange={(e) => setSort(e.target.value as SortKey)}>
             <option value="soonest">Soonest first</option>
             <option value="newest">Newest created</option>
             <option value="budget">Highest budget</option>
           </select>
           <div className="chips">
-            {[
-              ['all', 'All'],
-              ['upcoming', 'Upcoming'],
-              ['ongoing', 'In progress'],
-              ['completed', 'Completed'],
-            ].map(([key, label]) => (
+            {FILTERS.map(([key, label]) => (
               <button
                 key={key}
                 type="button"
