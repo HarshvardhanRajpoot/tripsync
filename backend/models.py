@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
 from database import Base
 
 
@@ -73,6 +74,8 @@ class Place(Base):
     estimated_cost = Column(Float, default=0)
     rating = Column(Float, nullable=True)
     destination = Column(String, index=True)  # which city this place belongs to
+    description = Column(Text, nullable=True)  # short text used for AI search ("" = looked up, none found)
+    embedding = Column(Vector(768), nullable=True)  # pgvector embedding used by the AI planner
 
     itinerary_items = relationship("ItineraryItem", back_populates="place")
 
@@ -105,3 +108,15 @@ class Expense(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     trip = relationship("Trip", back_populates="expenses")
+
+
+class AiPlan(Base):
+    """The last AI-generated plan for a trip, so it is still there after a page reload."""
+    __tablename__ = "ai_plans"
+
+    id = Column(Integer, primary_key=True, index=True)
+    trip_id = Column(Integer, ForeignKey("trips.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    request = Column(Text, nullable=True)   # the group's free-text wish
+    content = Column(Text, nullable=False)  # the plan as JSON
+    created_at = Column(DateTime(timezone=True), server_default=func.now())

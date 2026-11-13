@@ -10,11 +10,13 @@ import auth
 import places_service
 import routes_optimizer
 import routes_explore
+import routes_ai
 
 app = FastAPI(title="TripSync API")
 
 app.include_router(routes_optimizer.router)
 app.include_router(routes_explore.router)
+app.include_router(routes_ai.router)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://localhost:8000'
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 function getToken() {
   return localStorage.getItem('tripsync_token')
@@ -55,6 +55,10 @@ export const api = {
     request(`/api/trips/${tripId}/preferences`, { method: 'POST', body: data, auth: true }),
   listPreferences: (tripId) =>
     request(`/api/trips/${tripId}/preferences`, { auth: true }),
+
+  generateAiPlan: (tripId, data) =>
+    request(`/api/trips/${tripId}/ai-plan`, { method: 'POST', body: data, auth: true }),
+  getAiPlan: (tripId) => request(`/api/trips/${tripId}/ai-plan`, { auth: true }),
 
   exploreStates: () => request('/api/explore/states', { auth: true }),
   exploreDistricts: (state) =>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { api } from '../api'
+import BudgetBreakdown from '../components/BudgetBreakdown'
 
 const INTEREST_OPTIONS = ['beach', 'food', 'culture', 'adventure', 'nightlife', 'nature', 'shopping']
 const PACE_OPTIONS = ['relaxed', 'moderate', 'packed']
@@ -19,12 +20,20 @@ function TripDetail() {
   const [mustSee, setMustSee] = useState('')
   const [saving, setSaving] = useState(false)
 
+  const [aiRequest, setAiRequest] = useState('')
+  const [aiPlan, setAiPlan] = useState(null)
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiError, setAiError] = useState('')
+  const [budgetStyle, setBudgetStyle] = useState('balanced')
+
   useEffect(() => {
     if (!api.getToken()) {
       navigate('/login')
       return
     }
     loadData()
+    // show the last AI plan if there is one (404 just means "none yet")
+    api.getAiPlan(id).then(setAiPlan).catch(() => {})
   }, [id])
 
   async function loadData() {
@@ -72,6 +81,20 @@ function TripDetail() {
       setError(err.message)
     } finally {
       setSaving(false)
+    }
+  }
+
+  async function handleGeneratePlan(e) {
+    e.preventDefault()
+    setAiLoading(true)
+    setAiError('')
+    try {
+      const plan = await api.generateAiPlan(id, { request: aiRequest.trim() || null, budget_style: budgetStyle })
+      setAiPlan(plan)
+    } catch (err) {
+      setAiError(err.message)
+    } finally {
+      setAiLoading(false)
     }
   }
 
@@ -152,6 +175,74 @@ function TripDetail() {
         </button>
         {saved && <p style={{ color: 'var(--mint)', fontWeight: 600, fontSize: '0.9rem' }}>Saved ✓</p>}
       </form>
+
+
+      <h2 className="section-label" style={{ marginTop: '2.5rem' }}>✨ AI trip planner</h2>
+      <form onSubmit={handleGeneratePlan} className="trip-form" style={{ maxWidth: '520px' }}>
+        <label className="field-label">
+          Anything else the group wants? (optional)
+          <textarea
+            className="field"
+            rows={2}
+            maxLength={300}
+            placeholder="e.g. street food, old forts, not too tiring"
+            value={aiRequest}
+            onChange={(e) => setAiRequest(e.target.value)}
+          />
+        </label>
+        <label className="field-label">
+          Budget style
+          <select className="field" value={budgetStyle} onChange={(e) => setBudgetStyle(e.target.value)}>
+            <option value="budget">Budget-friendly (more for travel and food)</option>
+            <option value="balanced">Balanced</option>
+            <option value="comfort">Comfortable (more for stay)</option>
+          </select>
+        </label>
+        <button className="btn-primary" type="submit" disabled={aiLoading}>
+          {aiLoading ? 'Planning your trip… (the first run can take ~30s)' : aiPlan ? 'Regenerate plan' : 'Generate AI plan'}
+        </button>
+        <p style={{ fontSize: '0.8rem', color: 'var(--ink-soft)', margin: 0 }}>
+          Uses everyone&rsquo;s saved preferences and the trip budget.
+        </p>
+        {aiError && <p className="form-error">{aiError}</p>}
+      </form>
+
+      {aiPlan && (
+        <div style={{ marginTop: '1.5rem', maxWidth: '720px' }}>
+          {aiPlan.summary && <p style={{ fontSize: '1.05rem', lineHeight: 1.5 }}>{aiPlan.summary}</p>}
+          <BudgetBreakdown data={aiPlan.breakdown} />
+          <p style={{ color: 'var(--ink-soft)', fontSize: '0.9rem' }}>
+            Planned ₹{Math.round(aiPlan.budget.total_cost)} of ₹{Math.round(aiPlan.budget.activity_budget)} activity budget
+            {aiPlan.budget_note ? ` · ${aiPlan.budget_note}` : ''}
+          </p>
+          {aiPlan.warnings?.map((w, i) => (
+            <p key={i} className="note" style={{ fontSize: '0.85rem' }}>⚠ {w}</p>
+          ))}
+          {aiPlan.unmatched_must_sees?.length > 0 && (
+            <p className="note" style={{ fontSize: '0.85rem' }}>
+              Couldn&rsquo;t find: {aiPlan.unmatched_must_sees.join(', ')}
+            </p>
+          )}
+          {aiPlan.days.map((day) => (
+            <div key={day.day} style={{ marginTop: '1.4rem' }}>
+              <h3 style={{ marginBottom: '0.6rem' }}>Day {day.day} · {day.title}</h3>
+              <div className="trip-list">
+                {day.stops.map((s) => (
+                  <div key={s.place_id} className="trip-card">
+                    <div className="trip-card-icon">{s.time_of_day === 'morning' ? '🌅' : s.time_of_day === 'evening' ? '🌙' : '☀️'}</div>
+                    <div className="trip-card-main">
+                      <h3>{s.name} <span style={{ fontWeight: 400, fontSize: '0.85rem', color: 'var(--ink-soft)' }}>· ₹{Math.round(s.cost)}</span></h3>
+                      {s.why && <p className="destination">{s.why}</p>}
+                      {s.tip && <p style={{ fontSize: '0.85rem', color: 'var(--ink-soft)', margin: '0.2rem 0 0' }}>💡 {s.tip}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {!aiPlan.ai_used && <p className="note" style={{ fontSize: '0.8rem' }}>AI text wasn&rsquo;t available, so this is the optimizer&rsquo;s plan.</p>}
+        </div>
+      )}
 
       <h2 className="section-label" style={{ marginTop: '2.5rem' }}>Group preferences</h2>
       <div className="trip-list">

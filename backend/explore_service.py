@@ -252,7 +252,8 @@ def _parse_osm(elements: list[dict], district: str, state: str) -> list[dict]:
 _WIKI_KEEP = ("fort", "palace", "temple", "mosque", "church", "gurdwara", "monument", "museum", "lake",
               "garden", "park", "dam", "waterfall", "beach", "observatory", "tomb", "mausoleum", "heritage",
               "cave", "sanctuary", "ghat", "shrine", "stepwell", "baoli", "gate", "tower", "minar",
-              "memorial", "zoo", "hill", "viewpoint", "reservoir", "barrage", "wildlife", "tourist", "math")
+              "memorial", "zoo", "hill", "viewpoint", "reservoir", "barrage", "wildlife", "tourist", "math",
+              "peak", "falls", "canyon", "valley", "national park", "ravine", "rock")
 _WIKI_SKIP = ("village", "school", "college", "university", "railway", "station", "town in", "city in",
               "district", "tehsil", "hospital", "institute")
 
