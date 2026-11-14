@@ -3,9 +3,6 @@
 **An AI-powered group trip planner.** Everyone in the group says what they like, and TripSync builds one day-by-day plan that fits the shared budget, with a budget breakdown for travel, stay, food and activities.
 
 > **Live demo:** _add your Vercel link here after deploying_  
-> **Demo video / screenshots:** see [`docs/screenshots`](docs/screenshots) _(add 2–3 images and link them below)_
-
-<!-- ![Trip page with AI plan](docs/screenshots/ai-plan.png) -->
 
 ## What it does
 
@@ -15,6 +12,20 @@
 - **Budget breakdown.** The total budget is split into travel, stay, food, activities and a buffer, in three styles (budget-friendly, balanced, comfortable), with per-person and per-night figures and warnings when a category looks tight.
 - **Works for any destination.** Places are fetched automatically from OpenStreetMap and Wikipedia, so no paid API key is needed.
 - **Explore.** Browse the most visited places of any Indian state and district, with Google Maps links.
+
+## Screenshots
+
+| Dashboard | Group preferences |
+|---|---|
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Group preferences](docs/screenshots/preferences.png) |
+
+| AI plan and budget breakdown | Day-by-day plan |
+|---|---|
+| ![AI plan](docs/screenshots/ai-plan.png) | ![Day-by-day plan](docs/screenshots/ai-plan-days.png) |
+
+| Explore places |
+|---|
+| ![Explore](docs/screenshots/explore.png) |
 
 ## How the AI planner works
 
