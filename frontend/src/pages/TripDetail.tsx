@@ -112,7 +112,22 @@ function TripDetail() {
     }
   }
 
-  if (!trip) return <div className="dash">Loading...</div>
+  if (!trip) {
+    return (
+      <div className="dash">
+        {error ? (
+          <>
+            <p className="form-error">{error}</p>
+            <Link to="/dashboard" className="btn-secondary" style={{ textDecoration: 'none' }}>
+              ← Back to trips
+            </Link>
+          </>
+        ) : (
+          'Loading...'
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="dash">

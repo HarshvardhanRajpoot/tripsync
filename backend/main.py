@@ -138,6 +138,7 @@ def get_trip(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user),
 ):
+    _get_or_404_trip_member(trip_id, current_user.id, db)  # only members
     trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
@@ -151,6 +152,7 @@ def add_trip_member(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(auth.get_current_user),
 ):
+    _get_or_404_trip_member(trip_id, current_user.id, db)  # only members
     trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
@@ -304,6 +306,7 @@ def refresh_places(
     and caches them. Safe to call more than once — already-cached places
     are skipped, not duplicated.
     """
+    _get_or_404_trip_member(trip_id, current_user.id, db)  # only members
     trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
@@ -323,6 +326,7 @@ def list_places_for_trip(
     current_user: models.User = Depends(auth.get_current_user),
 ):
     """Returns whatever places are already cached for this trip's destination."""
+    _get_or_404_trip_member(trip_id, current_user.id, db)  # only members
     trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found")
