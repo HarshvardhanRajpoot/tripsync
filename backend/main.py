@@ -1,3 +1,4 @@
+import os
 import secrets
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +13,12 @@ import routes_optimizer
 import routes_explore
 import routes_ai
 
+def _cors_origins() -> list[str]:
+    """Browser origins allowed to call this API. On the host, set CORS_ORIGINS to your frontend URL."""
+    raw = os.getenv("CORS_ORIGINS", "http://localhost:5173")
+    return [o.strip().rstrip("/") for o in raw.split(",") if o.strip()]
+
+
 app = FastAPI(title="TripSync API")
 
 app.include_router(routes_optimizer.router)
@@ -20,7 +27,7 @@ app.include_router(routes_ai.router)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
 )

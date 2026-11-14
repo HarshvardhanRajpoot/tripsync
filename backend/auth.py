@@ -9,6 +9,8 @@ Auth utilities: password hashing + JWT tokens.
 import os
 from datetime import datetime, timedelta, timezone
 
+from dotenv import load_dotenv
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 
@@ -16,7 +18,14 @@ from passlib.context import CryptContext
 # In production these should come from environment variables (.env),
 # never hardcoded. SECRET_KEY signs the JWTs — if someone else knows
 # it, they can forge tokens and impersonate any user.
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-secret-change-me")
+load_dotenv()
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "")
+if len(SECRET_KEY) < 32 or SECRET_KEY == "dev-secret-change-me":
+    raise RuntimeError(
+        "JWT_SECRET_KEY is missing or too short. Set it in backend/.env (or in your host's environment "
+        "variables) to a random string of at least 32 characters. Generate one with: "
+        'python -c "import secrets; print(secrets.token_urlsafe(48))"'
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 days, fine for a student project
 
