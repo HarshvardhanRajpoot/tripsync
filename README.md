@@ -153,6 +153,6 @@ cd frontend && npm run typecheck           # strict TypeScript check
 - Runtime response validation on the frontend
 - Deployment configuration (Render + Vercel)
 
-## Team
+## Author
 
-Harsh Vardhan Singh Rajpoot, Atharva Dwivedi — Samrat Ashok Technological Institute (SATI), Vidisha, B.Tech
+Harsh Vardhan Singh Rajpoot — Samrat Ashok Technological Institute (SATI), Vidisha, B.Tech
