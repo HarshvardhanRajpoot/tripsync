@@ -2,7 +2,8 @@
 
 **An AI-powered group trip planner.** Everyone in the group says what they like, and TripSync builds one day-by-day plan that fits the shared budget, with a budget breakdown for travel, stay, food and activities.
 
-> **Live demo:** _add your Vercel link here after deploying_  
+> **Live demo:** https://tripsync-kappa-pearl.vercel.app  
+> _The free backend sleeps when idle, so the first request after a pause can take 30 to 60 seconds._ 
 
 ## What it does
 
