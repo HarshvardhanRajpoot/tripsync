@@ -152,7 +152,11 @@ cd frontend && npm run typecheck           # strict TypeScript check
 - Daily meal suggestions and hotel options near each day's stops
 - Expense tracking and "who owes whom" for the group
 - Runtime response validation on the frontend
-- Deployment configuration (Render + Vercel)
+
+## Deployment
+- Backend run on Render
+- Frontend run on Vercel
+- Database on Supabase
 
 ## Author
 
